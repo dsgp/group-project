@@ -9,7 +9,7 @@ void net_init(struct port *port)
 
 void net_rx(struct port *port, int c)
 {
-	if (c == EOP) {
+	if (c == NCHAR_EOP) {
 		printf("[%s] recv: %s\n", port->name, port->net.rbuf + 1);
 		if (*port->name == 'r')
 			for (int i = 0; routes[i].addr; i++)
@@ -34,7 +34,7 @@ int net_tx(struct port *port)
 		printf("[%s] sent: %s\n", port->name, port->net.tbuf + 1);
 		port->net.i = 0;
 		port->net.nt = -1;
-		return EOP;
+		return NCHAR_EOP;
 	}
 
 	return port->net.tbuf[port->net.i++];
