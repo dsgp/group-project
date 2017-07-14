@@ -1,7 +1,7 @@
 SRC := $(wildcard *.c)
 OBJS := $(SRC:.c=.o)
 
-CFLAGS := -Wall -Wextra -g -O0
+CFLAGS := -Wall -Wextra -g -O0 -std=c99
 
 all: spacewire
 
