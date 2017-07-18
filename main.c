@@ -1,6 +1,7 @@
 #include "common.h"
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define NUM_PORTS 8
 
@@ -34,16 +35,27 @@ static void port_init(const struct route *route)
 		strcpy(port->net.tbuf, route->msg);
 	}
 
+	phys_init(port);
 	sig_init(port);
 	flow_init(port);
 	net_init(port);
+	phys_init(endp);
 	sig_init(endp);
 	flow_init(endp);
 	net_init(endp);
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+	size_t seed;
+
+	printf("usage: %s [seed]\n", *argv);
+
+	// seed
+	seed = argc > 1 ? atoi(argv[1]) : time(0);
+	srand(seed);
+	printf("seed: %zu\n", seed);
+
 	for (unsigned i = 0; routes[i].addr; i++)
 		port_init(routes + i);
 

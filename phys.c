@@ -1,10 +1,40 @@
 #include "common.h"
+#include <stdlib.h>
+
+void phys_init(struct port *port)
+{
+	(void) port;
+}
 
 void phys_tx(struct port *port)
 {
 	int b = sig_tx(port);
 	if (b < 0)
 		return;
+
+	/* fault injection */
+#ifdef ENABLE_FAULT_INJECTION
+	int error = 0;
+
+	int b_prev = b;
+
+	/* randomly inject fault into data signal based on data BER */
+	if (rand() < DATA_BER * RAND_MAX) {
+		b ^= 0x1;
+		error = 1;
+	}
+
+	/* randomly inject fault into strobe signal based on strobe BER */
+	if (rand() < STROBE_BER * RAND_MAX) {
+		b ^= 0x2;
+		error = 1;
+	}
+
+	if (error) {
+		printf("tx: %u -> %u\n", b_prev, b);
+	}
+#endif
+
 	port->phys.tbuf[(*port->phys.nt)++] = b;
 }
 

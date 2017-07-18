@@ -2,6 +2,7 @@
 
 void flow_init(struct port *port)
 {
+	(void) port;
 }
 
 void flow_rx(struct port *port, int c)

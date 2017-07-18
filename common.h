@@ -23,6 +23,10 @@
 #define CHAR_CONTROL_SIZE 4
 #define CHAR_DATA_SIZE 10
 
+//#define ENABLE_FAULT_INJECTION
+#define DATA_BER   0.00001f /* BER = upsets per transfer */
+#define STROBE_BER 0.00000f /* BER = upsets per transfer */
+
 struct port {
 	char name[16];
 	int addr;
@@ -57,6 +61,7 @@ extern const struct route routes[];
 
 void phys_tx(struct port *);
 void phys_rx(struct port *);
+void phys_init(struct port *);
 
 int sig_tx(struct port *);
 void sig_rx(struct port *, int);
