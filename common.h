@@ -23,9 +23,16 @@
 #define CHAR_CONTROL_SIZE 4
 #define CHAR_DATA_SIZE 10
 
-//#define ENABLE_FAULT_INJECTION
+#define ENABLE_FAULT_INJECTION
 #define DATA_BER   0.00001f /* BER = upsets per transfer */
 #define STROBE_BER 0.00000f /* BER = upsets per transfer */
+
+#define SIG_ESC_ERROR			0x200
+#define SIG_PARITY_ERROR		0x201
+#define SIG_STROBE_ERROR		0x202
+#define SIG_DISCONNECT_ERROR	0x203
+
+#define DISCONNECT_TIMEOUT 850
 
 struct port {
 	char name[16];
@@ -43,11 +50,12 @@ struct port {
 		int nt, nr;
 		int add_fct, got_esc;
 		int tx_char, tx_parity, tx_data, tx_strobe, tx_size;
-		int rx_char, rx_parity, rx_data, rx_strobe;
+		int rx_char, rx_parity, rx_data, rx_strobe, rx_buffer;
 	} sig;
 	struct {
 		int *nt, *nr;
 		int *tbuf, *rbuf;
+		int rx_timer;
 	} phys;
 };
 

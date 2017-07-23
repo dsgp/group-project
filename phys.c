@@ -40,8 +40,12 @@ void phys_tx(struct port *port)
 
 void phys_rx(struct port *port)
 {
-	if (!*port->phys.nr)
+	if (!*port->phys.nr) {
+		if (port->phys.rx_timer++ == DISCONNECT_TIMEOUT)
+			sig_rx(port, SIG_DISCONNECT_ERROR);
 		return;
+	}
+	port->phys.rx_timer = 0;
 
 	int b = port->phys.rbuf[--(*port->phys.nr)];
 	sig_rx(port, b);

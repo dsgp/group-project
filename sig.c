@@ -2,34 +2,58 @@
 
 void sig_init(struct port *port)
 {
-	// Start a running parity of 1 to ensure odd number of 1s
+	// Start a running parity of 1 so that our first parity bit is 1
 	port->sig.tx_parity = 1;
-	port->sig.rx_parity = 1;
+	port->sig.rx_char = -1;
+}
+
+void sig_rx_reset(struct port *port)
+{
+	port->sig.rx_strobe = 0;
+	port->sig.rx_data = 0;
+	port->sig.rx_parity = 0;
+	port->sig.rx_char = -1;
+	port->sig.nr = 0;
+	port->sig.rx_buffer = 0;
 }
 
 void sig_rx(struct port *port, int c)
 {
-	//return flow_rx(port, c);
+	// Pass disconnect errors directly up to Flow
+	if (c == SIG_DISCONNECT_ERROR)
+	{
+		sig_rx_reset(port);
+		flow_rx(port, SIG_DISCONNECT_ERROR);
+		return;
+	}
+
 	int character;
 	int data = c & 0x1;
-	//int strobe = (c >> 1) & 0x1;
-	int buffer = (port->sig.rx_data | (data << port->sig.nr++)); 
+	int strobe = (c >> 1) & 0x1;
+	int buffer = (port->sig.rx_buffer | (data << port->sig.nr++));
 
-	// TODO: Check for strobe error
+	port->sig.rx_parity = (!port->sig.rx_parity != !data);
 
-	// TODO: Parity check
-	// port->sig.rx_parity = (!port->sig.rx_parity != !data);
+	// Check for strobe error
+	/*if (data == port->sig.rx_data && strobe == port->sig.rx_strobe) {
+		sig_rx_reset(port);
+		flow_rx(port, SIG_STROBE_ERROR);
+		return;
+	}*/
 
-	// Temporary fix to satisfy parity check
-	port->sig.rx_parity = buffer & 0x1;
+	port->sig.rx_data = data;
+	port->sig.rx_strobe = strobe;
 
 	// Check if it's a control character
-	if (port->sig.nr == CHAR_CONTROL_SIZE && (buffer & 0x2) && ((buffer & 0x1) == port->sig.rx_parity)) {
+	 if (port->sig.nr == CHAR_CONTROL_SIZE && (buffer & 0x2)) {
+		// Strip parity and DC flag bits
 		int payload = (buffer >> 2) & 0x3;
 
 		if (port->sig.got_esc) {
 			if (payload == BITS_FCT)
 				character = LCHAR_NULL;
+			else
+				character = SIG_ESC_ERROR;
 			port->sig.got_esc = 0;
 		}
 		else if (payload == BITS_FCT)
@@ -42,26 +66,37 @@ void sig_rx(struct port *port, int c)
 			port->sig.got_esc = 1;
 	}
 	// Check if it's a data character
-	else if (port->sig.nr == CHAR_DATA_SIZE && !(buffer & 0x2) && ((buffer & 0x1) == port->sig.rx_parity)) {
+	else if (port->sig.nr == CHAR_DATA_SIZE && !(buffer & 0x2)) {
 		// Strip parity and DC flag bits
 		character = (buffer >> 2) & 0xff;
 	}
 	// Check for errors
 	else if (port->sig.nr >= CHAR_DATA_SIZE) {
-		// TODO: Error correction
-		return;
+		// This only happens when net.nr > MAX_FIFO_SIZE
+		printf("sig.nr corrupted! (%d)\n", port->sig.nr);
 	}
 	// Keep buffering bits
 	else {
-		port->sig.rx_data = buffer;
+		// Check parity before escalating to Flow
+		if (port->sig.nr == 2) {
+			if (port->sig.rx_char != -1) {
+				if (!port->sig.rx_parity)
+					flow_rx(port, SIG_PARITY_ERROR);
+				else if (!port->sig.got_esc)
+					flow_rx(port, port->sig.rx_char);
+			}
+
+			// Reset running parity for next coverage area
+			port->sig.rx_parity = 0;
+		}
+
+		port->sig.rx_buffer = buffer;
 		return;
 	}
 
-	port->sig.rx_data = 0;
-	port->sig.rx_parity = 0;
+	port->sig.rx_char = character;
 	port->sig.nr = 0;
-	if (!port->sig.got_esc)
-		flow_rx(port, character);
+	port->sig.rx_buffer = 0;
 }
 
 int sig_tx(struct port *port)
