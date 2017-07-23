@@ -23,7 +23,8 @@ void sig_rx(struct port *port, int c)
 	if (c == SIG_DISCONNECT_ERROR)
 	{
 		sig_rx_reset(port);
-		flow_rx(port, SIG_DISCONNECT_ERROR);
+//TODO		flow_rx(port, SIG_DISCONNECT_ERROR);
+		VEPRINT(stderr, "disconnect error!\n");
 		return;
 	}
 
@@ -32,12 +33,12 @@ void sig_rx(struct port *port, int c)
 	int strobe = (c >> 1) & 0x1;
 	int buffer = (port->sig.rx_buffer | (data << port->sig.nr++));
 
-	port->sig.rx_parity = (!port->sig.rx_parity != !data);
+	port->sig.rx_parity = (port->sig.rx_parity ^ data);
 
 	// Check for strobe error
 	/*if (data == port->sig.rx_data && strobe == port->sig.rx_strobe) {
 		sig_rx_reset(port);
-		flow_rx(port, SIG_STROBE_ERROR);
+		VEPRINT(stderr, "strobe error!\n");
 		return;
 	}*/
 
@@ -50,20 +51,21 @@ void sig_rx(struct port *port, int c)
 		int payload = (buffer >> 2) & 0x3;
 
 		if (port->sig.got_esc) {
-			if (payload == BITS_FCT)
+			if (payload == BITS_FCT) {
 				character = LCHAR_NULL;
-			else
-				character = SIG_ESC_ERROR;
+			} else {
+				VEPRINT(stderr, "escape error!\n");
+			}
 			port->sig.got_esc = 0;
-		}
-		else if (payload == BITS_FCT)
+		} else if (payload == BITS_FCT) {
 			character = LCHAR_FCT;
-		else if (payload == BITS_EOP)
+		} else if (payload == BITS_EOP) {
 			character = LCHAR_EOP;
-		else if (payload == BITS_EEP)
+		} else if (payload == BITS_EEP) {
 			character = LCHAR_EEP;
-		else // BITS_ESC
+		} else { // BITS_ESC
 			port->sig.got_esc = 1;
+		}
 	}
 	// Check if it's a data character
 	else if (port->sig.nr == CHAR_DATA_SIZE && !(buffer & 0x2)) {
@@ -72,18 +74,19 @@ void sig_rx(struct port *port, int c)
 	}
 	// Check for errors
 	else if (port->sig.nr >= CHAR_DATA_SIZE) {
-		// This only happens when net.nr > MAX_FIFO_SIZE
-		printf("sig.nr corrupted! (%d)\n", port->sig.nr);
+		// This only happens when sig.nr > CHAR_DATA_SIZE
+		VEPRINT(stderr, "sig.nr corrupted! (%d)\n", port->sig.nr);
 	}
 	// Keep buffering bits
 	else {
 		// Check parity before escalating to Flow
 		if (port->sig.nr == 2) {
 			if (port->sig.rx_char != -1) {
-				if (!port->sig.rx_parity)
-					flow_rx(port, SIG_PARITY_ERROR);
-				else if (!port->sig.got_esc)
+				if (!port->sig.rx_parity) {
+					VEPRINT(stderr, "parity error!\n");
+				} else if (!port->sig.got_esc) {
 					flow_rx(port, port->sig.rx_char);
+				}
 			}
 
 			// Reset running parity for next coverage area

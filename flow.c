@@ -13,7 +13,7 @@ void flow_rx(struct port *port, int c)
 
 		// excessive FCTs triggers a credit error
 		if (port->flow.tx_allowance > MAX_CREDIT_COUNT) {
-			fprintf(stderr, "credit error!\n");
+			VEPRINT(stderr, "credit error!\n");
 		}
 
 		return;
@@ -29,6 +29,10 @@ void flow_rx(struct port *port, int c)
 	// LCHAR EEP becomes NCHAR EEP
 	} else if (c == LCHAR_EEP) {
 		c = NCHAR_EEP;
+	} else if (c < 0x100) {
+		// normative character - do nothing
+	} else {
+		VEPRINT(stderr, "sim error! (%d)\n", c);
 	}
 
 	port->flow.tx_outstanding--;

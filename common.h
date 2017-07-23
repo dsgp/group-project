@@ -3,6 +3,13 @@
 
 #include <stdio.h>
 
+/* user options */
+#define VERBOSE_ERRORS         // error reports are verbose
+#define ENABLE_FAULT_INJECTION // fault injection is performed
+#define DATA_BER   0.00001f    // - BER = upsets per transfer
+#define STROBE_BER 0.00000f    // - BER = upsets per transfer
+
+/* definitions */
 #define LCHAR_NULL 0x100
 #define LCHAR_FCT  0x101
 #define LCHAR_EOP  0x102
@@ -23,16 +30,15 @@
 #define CHAR_CONTROL_SIZE 4
 #define CHAR_DATA_SIZE 10
 
-#define ENABLE_FAULT_INJECTION
-#define DATA_BER   0.00001f /* BER = upsets per transfer */
-#define STROBE_BER 0.00000f /* BER = upsets per transfer */
-
-#define SIG_ESC_ERROR			0x200
-#define SIG_PARITY_ERROR		0x201
-#define SIG_STROBE_ERROR		0x202
-#define SIG_DISCONNECT_ERROR	0x203
+#define SIG_DISCONNECT_ERROR 0x203
 
 #define DISCONNECT_TIMEOUT 850
+
+#ifdef VERBOSE_ERRORS
+#	define VEPRINT(f, fmt, ...) fprintf(f, fmt, ## __VA_ARGS__)
+#else
+#	define VEPRINT(f, fmt, ...)
+#endif
 
 struct port {
 	char name[16];

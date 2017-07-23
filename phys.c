@@ -8,9 +8,13 @@ void phys_init(struct port *port)
 
 void phys_tx(struct port *port)
 {
+	static unsigned long long cycle = 0;
+
 	int b = sig_tx(port);
 	if (b < 0)
 		return;
+
+	cycle++;
 
 	/* fault injection */
 #ifdef ENABLE_FAULT_INJECTION
@@ -31,7 +35,7 @@ void phys_tx(struct port *port)
 	}
 
 	if (error) {
-		printf("tx: %u -> %u\n", b_prev, b);
+		VEPRINT(stderr, "%016llu: tx: %u -> %u\n", cycle, b_prev, b);
 	}
 #endif
 
