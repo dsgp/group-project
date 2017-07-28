@@ -5,12 +5,6 @@ void sig_init(struct port *port)
 	// Start a running parity of 1 so that our first parity bit is 1
 	port->sig.tx_parity = 1;
 	port->sig.rx_char = -1;
-
-	port->sig.rx_strobe = 0;
-	port->sig.rx_data = 0;
-	port->sig.rx_parity = 0;
-	port->sig.nr = 0;
-	port->sig.rx_buffer = 0;
 }
 
 void sig_rx(struct port *port, int c)
@@ -41,8 +35,9 @@ void sig_rx(struct port *port, int c)
 			if (payload == BITS_FCT) {
 				character = LCHAR_NULL;
 			} else {
-				VEPRINT(stderr, "escape error!\n");
+				VEPRINT(stderr, "[%s] %016llu: escape error!\n", port->name, port->cycle);
 				phys_reset(port);
+				return;
 			}
 			port->sig.got_esc = 0;
 		} else if (payload == BITS_FCT) {
@@ -63,7 +58,7 @@ void sig_rx(struct port *port, int c)
 	// Check for errors
 	else if (port->sig.nr >= CHAR_DATA_SIZE) {
 		// This only happens when sig.nr > CHAR_DATA_SIZE
-		VEPRINT(stderr, "sig.nr corrupted! (%d)\n", port->sig.nr);
+		VEPRINT(stderr, "[%s] %016llu: sim error! func=%s line=%d (%d)\n", port->name, port->cycle, __FUNCTION__, __LINE__, port->sig.nr);
 	}
 	// Keep buffering bits
 	else {
@@ -71,10 +66,13 @@ void sig_rx(struct port *port, int c)
 		if (port->sig.nr == 2) {
 			if (port->sig.rx_char != -1) {
 				if (!port->sig.rx_parity) {
-					VEPRINT(stderr, "parity error!\n");
+					VEPRINT(stderr, "[%s] %016llu: parity error!\n", port->name, port->cycle);
 					phys_reset(port);
+					return;
 				} else if (!port->sig.got_esc) {
-					flow_rx(port, port->sig.rx_char);
+					if (flow_rx(port, port->sig.rx_char) < 0) {
+						return;
+					}
 				}
 			}
 

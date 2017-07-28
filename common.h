@@ -39,6 +39,7 @@
 struct port {
 	char name[16];
 	int addr;
+	unsigned long long cycle;
 	struct port *endp;
 
 	struct {
@@ -78,7 +79,7 @@ void sig_rx(struct port *, int);
 void sig_init(struct port *);
 
 int flow_tx(struct port *);
-void flow_rx(struct port *, int);
+int flow_rx(struct port *, int);
 void flow_init(struct port *);
 
 int net_tx(struct port *);
