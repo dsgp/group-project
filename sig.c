@@ -5,29 +5,16 @@ void sig_init(struct port *port)
 	// Start a running parity of 1 so that our first parity bit is 1
 	port->sig.tx_parity = 1;
 	port->sig.rx_char = -1;
-}
 
-void sig_rx_reset(struct port *port)
-{
 	port->sig.rx_strobe = 0;
 	port->sig.rx_data = 0;
 	port->sig.rx_parity = 0;
-	port->sig.rx_char = -1;
 	port->sig.nr = 0;
 	port->sig.rx_buffer = 0;
 }
 
 void sig_rx(struct port *port, int c)
 {
-	// Pass disconnect errors directly up to Flow
-	if (c == SIG_DISCONNECT_ERROR)
-	{
-		sig_rx_reset(port);
-//TODO		flow_rx(port, SIG_DISCONNECT_ERROR);
-		VEPRINT(stderr, "disconnect error!\n");
-		return;
-	}
-
 	int character;
 	int data = c & 0x1;
 	int strobe = (c >> 1) & 0x1;
@@ -37,8 +24,8 @@ void sig_rx(struct port *port, int c)
 
 	// Check for strobe error
 	/*if (data == port->sig.rx_data && strobe == port->sig.rx_strobe) {
-		sig_rx_reset(port);
 		VEPRINT(stderr, "strobe error!\n");
+		phys_reset(port);
 		return;
 	}*/
 
@@ -55,6 +42,7 @@ void sig_rx(struct port *port, int c)
 				character = LCHAR_NULL;
 			} else {
 				VEPRINT(stderr, "escape error!\n");
+				phys_reset(port);
 			}
 			port->sig.got_esc = 0;
 		} else if (payload == BITS_FCT) {
@@ -84,6 +72,7 @@ void sig_rx(struct port *port, int c)
 			if (port->sig.rx_char != -1) {
 				if (!port->sig.rx_parity) {
 					VEPRINT(stderr, "parity error!\n");
+					phys_reset(port);
 				} else if (!port->sig.got_esc) {
 					flow_rx(port, port->sig.rx_char);
 				}

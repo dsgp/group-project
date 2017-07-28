@@ -30,19 +30,16 @@
 #define CHAR_CONTROL_SIZE 4
 #define CHAR_DATA_SIZE 10
 
-#define SIG_DISCONNECT_ERROR 0x203
-
-#define DISCONNECT_TIMEOUT 850
-
 #ifdef VERBOSE_ERRORS
 #	define VEPRINT(f, fmt, ...) fprintf(f, fmt, ## __VA_ARGS__)
 #else
-#	define VEPRINT(f, fmt, ...)
+#	define VEPRINT(f, fmt, ...) ((void)0)
 #endif
 
 struct port {
 	char name[16];
 	int addr;
+	struct port *endp;
 
 	struct {
 		int nt, nr, i;
@@ -59,9 +56,8 @@ struct port {
 		int rx_char, rx_parity, rx_data, rx_strobe, rx_buffer;
 	} sig;
 	struct {
-		int *nt, *nr;
-		int *tbuf, *rbuf;
-		int rx_timer;
+		int reset;
+		int signal;
 	} phys;
 };
 
@@ -75,7 +71,7 @@ extern const struct route routes[];
 
 void phys_tx(struct port *);
 void phys_rx(struct port *);
-void phys_init(struct port *);
+void phys_reset(struct port *);
 
 int sig_tx(struct port *);
 void sig_rx(struct port *, int);

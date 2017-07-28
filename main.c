@@ -23,25 +23,16 @@ static void port_init(const struct route *route)
 	snprintf(endp->name, sizeof endp->name, "router0.%x", route->port);
 	port->addr = route->addr;
 	endp->addr = route->addr;
-
-	/* links */
-	endp->phys.tbuf = port->phys.rbuf = calloc(64, sizeof(int));
-	endp->phys.rbuf = port->phys.tbuf = calloc(64, sizeof(int));
-	endp->phys.nt = port->phys.nr = calloc(1, sizeof(int));
-	endp->phys.nr = port->phys.nt = calloc(1, sizeof(int));
+	port->endp = endp;
+	endp->endp = port;
 
 	if (route->msg) {
 		port->net.nt = strlen(route->msg) + 1;
 		strcpy(port->net.tbuf, route->msg);
 	}
 
-	phys_init(port);
-	sig_init(port);
-	flow_init(port);
+	phys_reset(port);
 	net_init(port);
-	phys_init(endp);
-	sig_init(endp);
-	flow_init(endp);
 	net_init(endp);
 }
 

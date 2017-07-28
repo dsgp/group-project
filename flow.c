@@ -2,7 +2,8 @@
 
 void flow_init(struct port *port)
 {
-	(void) port;
+	port->flow.tx_allowance = 0;
+	port->flow.tx_outstanding = 0;
 }
 
 void flow_rx(struct port *port, int c)
@@ -14,6 +15,7 @@ void flow_rx(struct port *port, int c)
 		// excessive FCTs triggers a credit error
 		if (port->flow.tx_allowance > MAX_CREDIT_COUNT) {
 			VEPRINT(stderr, "credit error!\n");
+			phys_reset(port);
 		}
 
 		return;
