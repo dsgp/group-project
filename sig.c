@@ -35,7 +35,8 @@ void sig_rx(struct port *port, int c)
 			if (payload == BITS_FCT) {
 				character = LCHAR_NULL;
 			} else {
-				VEPRINT(stderr, "[%s] %016llu: escape error!\n", port->name, port->cycle);
+				VEPRINT(stderr, "[%s] %016llu: escape error!\n", port->name, port->info.cycle);
+				port->info.num_escape_errors++;
 				phys_reset(port);
 				return;
 			}
@@ -58,7 +59,8 @@ void sig_rx(struct port *port, int c)
 	// Check for errors
 	else if (port->sig.nr >= CHAR_DATA_SIZE) {
 		// This only happens when sig.nr > CHAR_DATA_SIZE
-		VEPRINT(stderr, "[%s] %016llu: sim error! func=%s line=%d (%d)\n", port->name, port->cycle, __FUNCTION__, __LINE__, port->sig.nr);
+		VEPRINT(stderr, "[%s] %016llu: sim error! func=%s line=%d (%d)\n", port->name, port->info.cycle, __FUNCTION__, __LINE__, port->sig.nr);
+		abort();
 	}
 	// Keep buffering bits
 	else {
@@ -66,7 +68,8 @@ void sig_rx(struct port *port, int c)
 		if (port->sig.nr == 2) {
 			if (port->sig.rx_char != -1) {
 				if (!port->sig.rx_parity) {
-					VEPRINT(stderr, "[%s] %016llu: parity error!\n", port->name, port->cycle);
+					VEPRINT(stderr, "[%s] %016llu: parity error!\n", port->name, port->info.cycle);
+					port->info.num_parity_errors++;
 					phys_reset(port);
 					return;
 				} else if (!port->sig.got_esc) {
@@ -128,7 +131,7 @@ int sig_tx(struct port *port)
 		port->sig.tx_size = dc_flag ? CHAR_CONTROL_SIZE : CHAR_DATA_SIZE;
 
 		// Calculate parity
-		int parity = (!port->sig.tx_parity != !dc_flag);
+		int parity = (port->sig.tx_parity ^ dc_flag);
 
 		// Shift parity and data control flag in front of data
 		port->sig.tx_char = (parity) | (dc_flag << 1) | ((c & 0xff) << 2);

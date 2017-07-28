@@ -9,11 +9,12 @@ int flow_rx(struct port *port, int c)
 {
 	// receiving an FCT allows transfer of 8 more NCHARs
 	if (c == LCHAR_FCT) {
-		port->flow.tx_allowance += 8;
+		port->flow.tx_credits += 8;
 
 		// excessive FCTs triggers a credit error
-		if (port->flow.tx_allowance > MAX_CREDIT_COUNT) {
-			VEPRINT(stderr, "[%s] %016llu: credit error!\n", port->name, port->cycle);
+		if (port->flow.tx_credits > MAX_CREDIT_COUNT) {
+			VEPRINT(stderr, "[%s] %016llu: credit error!\n", port->name, port->info.cycle);
+			port->info.num_credit_errors++;
 			phys_reset(port);
 			return -1;
 		}
@@ -35,7 +36,8 @@ int flow_rx(struct port *port, int c)
 	} else if (c < 0x100) {
 		// normative character - do nothing
 	} else {
-		VEPRINT(stderr, "[%s] %016llu: sim error! func=%s line=%d (%d)\n", port->name, port->cycle, __FUNCTION__, __LINE__, c);
+		VEPRINT(stderr, "[%s] %016llu: sim error! func=%s line=%d (%d)\n", port->name, port->info.cycle, __FUNCTION__, __LINE__, c);
+		abort();
 	}
 
 	port->flow.tx_outstanding--;
@@ -57,8 +59,8 @@ int flow_tx(struct port *port)
 		return LCHAR_FCT;
 
 	// priority 3: NCHARs: send NCHAR if available (NCHAR EOP becomes LCHAR EOP)
-	} else if (tx_rem > 0 && port->flow.tx_allowance > 0) {
-		port->flow.tx_allowance--;
+	} else if (tx_rem > 0 && port->flow.tx_credits > 0) {
+		port->flow.tx_credits--;
 		int c = net_tx(port);
 		return c == NCHAR_EOP ? LCHAR_EOP : c;
 	}

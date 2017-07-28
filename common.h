@@ -2,12 +2,14 @@
 #define COMMON_H
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* user options */
-#define VERBOSE_ERRORS         // error reports are verbose
+//#define VERBOSE_ERRORS         // error reports are verbose
 #define ENABLE_FAULT_INJECTION // fault injection is performed
-#define DATA_BER   0.00001f    // - BER = upsets per transfer
-#define STROBE_BER 0.00000f    // - BER = upsets per transfer
+#define DATA_BER   0.00001f    // - BER = upsets rate per transfer
+#define STROBE_BER 0.00001f    // - BER = upsets rate per transfer
 
 /* definitions */
 #define LCHAR_NULL 0x100
@@ -39,15 +41,21 @@
 struct port {
 	char name[16];
 	int addr;
-	unsigned long long cycle;
 	struct port *endp;
 
+	struct {
+		unsigned long long cycle;
+		unsigned num_parity_errors;
+		unsigned num_credit_errors;
+		unsigned num_escape_errors;
+		unsigned num_strobe_errors;
+	} info;
 	struct {
 		int nt, nr, i;
 		char tbuf[MAX_FIFO_SIZE], rbuf[MAX_FIFO_SIZE];
 	} net;
 	struct {
-		int tx_allowance;
+		int tx_credits;
 		int tx_outstanding;
 	} flow;
 	struct {

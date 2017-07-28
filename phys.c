@@ -1,10 +1,8 @@
 #include "common.h"
-#include <stdlib.h>
-#include <string.h>
 
 void phys_tx(struct port *port)
 {
-	port->cycle++;
+	port->info.cycle++;
 
 	int b = sig_tx(port);
 	if (b < 0)
@@ -28,7 +26,7 @@ void phys_tx(struct port *port)
 	}
 
 	if (error) {
-		VEPRINT(stderr, "[%s] %016llu: UPSET: tx: %u -> %u\n", port->name, port->cycle, b_prev, b);
+		VEPRINT(stderr, "[%s] %016llu: UPSET: tx: %u -> %u\n", port->name, port->info.cycle, b_prev, b);
 	}
 #endif
 
@@ -44,7 +42,7 @@ void phys_rx(struct port *port)
 
 void phys_reset(struct port *port)
 {
-	VEPRINT(stderr, "[%s] %016llu: RESET\n", port->name, port->cycle);
+	VEPRINT(stderr, "[%s] %016llu: RESET\n", port->name, port->info.cycle);
 
 	memset(&port->phys, 0, sizeof port->phys);
 	memset(&port->sig, 0, sizeof port->sig);
@@ -61,6 +59,7 @@ void phys_reset(struct port *port)
 	port->phys.reset = port->endp->phys.reset = 1;
 
 	/* flow control sends EEP to packet level */
+//XXX causings floating point exception: "i = (i + 1) % port->sig.tx_size;" in sig.c - divide by 0?
 //	net_rx(port, NCHAR_EEP);
 //	net_rx(port->endp, NCHAR_EEP);
 }
