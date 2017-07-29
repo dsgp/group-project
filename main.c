@@ -22,6 +22,10 @@ static void port_init(const struct route *route)
 
 	snprintf(port->name, sizeof port->name, "node%x.0", route->addr);
 	snprintf(endp->name, sizeof endp->name, "router0.%x", route->port);
+
+	snprintf(port->port_addr, sizeof port->port_addr, "%x.0", route->addr);
+	snprintf(endp->port_addr, sizeof endp->port_addr, "0.%x", route->port);
+
 	port->addr = route->addr;
 	endp->addr = route->addr;
 	port->endp = endp;
@@ -62,8 +66,8 @@ static void dump(const struct port *port)
 			port->info.num_rx_ctrl_char
 		);
 	} else {
-		printf("\"[%s]\" %f %u %u %u %u %u %u %u %u %u %u;\n",
-			port->name,
+		printf("%s %f %u %u %u %u %u %u %u %u %u %u;\n",
+			port->port_addr,
 			data_ber,
 			port->info.num_credit_errors,
 			port->info.num_parity_errors,

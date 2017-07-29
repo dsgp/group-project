@@ -42,6 +42,7 @@ extern int verbose;
 
 struct port {
 	char name[16];
+	char port_addr[16];
 	int addr;
 	struct port *endp;
 
