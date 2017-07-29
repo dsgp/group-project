@@ -1,9 +1,13 @@
 #include "common.h"
 
-void net_init(struct port *port)
+void net_init(struct port *port, const char *msg)
 {
-	if (!port->net.nt)
-		port->net.nt = -1;
+	port->net.i = 0;
+	port->net.nt = -1;
+	if (msg) {
+		port->net.nt = strlen(msg) + 1;
+		strcpy(port->net.tbuf, msg);
+	}
 }
 
 void net_rx(struct port *port, int c)
@@ -11,7 +15,8 @@ void net_rx(struct port *port, int c)
 	switch (c) {
 	case NCHAR_EOP:
 		port->info.num_eop++;
-		verbose && printf("[%s] recv: %s\n", port->name, port->net.rbuf + 1);
+		if (verbose)
+			printf("[%s] recv: %s\n", port->name, port->net.rbuf + 1);
 		if (*port->name == 'r')
 			for (int i = 0; routes[i].addr; i++)
 				if (routes[i].addr == port->net.rbuf[0]) {
@@ -36,9 +41,9 @@ int net_tx(struct port *port)
 		return -1;
 
 	if (port->net.i == port->net.nt) {
-		verbose && printf("[%s] sent: %s\n", port->name, port->net.tbuf + 1);
-		port->net.i = 0;
-		port->net.nt = -1;
+		if (verbose)
+			printf("[%s] sent: %s\n", port->name, port->net.tbuf + 1);
+		net_init(port, port->net.tbuf);
 		return NCHAR_EOP;
 	}
 

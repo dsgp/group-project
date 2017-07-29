@@ -8,8 +8,10 @@ struct port nodes[NUM_PORTS];
 struct port router[NUM_PORTS];
 
 const struct route routes[] = {
-{ 0x20, 0, "\x21hello world" },
-{ 0x21, 1, 0 },
+{ 0x20, 0, "\x21msg 0x20->0x21" },
+{ 0x21, 1, "\x22msg 0x21->0x22" },
+{ 0x22, 1, "\x23msg 0x22->0x23" },
+{ 0x23, 1, "\x20msg 0x23->0x20" },
 { 0 },
 };
 
@@ -25,14 +27,9 @@ static void port_init(const struct route *route)
 	port->endp = endp;
 	endp->endp = port;
 
-	if (route->msg) {
-		port->net.nt = strlen(route->msg) + 1;
-		strcpy(port->net.tbuf, route->msg);
-	}
-
 	phys_reset(port, 0);
-	net_init(port);
-	net_init(endp);
+	net_init(port, route->msg);
+	net_init(endp, 0);
 }
 
 static void dump(const struct port *port)

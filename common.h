@@ -101,6 +101,6 @@ void flow_init(struct port *);
 
 int net_tx(struct port *);
 void net_rx(struct port *, int);
-void net_init(struct port *);
+void net_init(struct port *, const char *);
 
 #endif
