@@ -16,13 +16,6 @@ void sig_rx(struct port *port, int c)
 
 	port->sig.rx_parity = (port->sig.rx_parity ^ data);
 
-	// Check for strobe error
-	/*if (data == port->sig.rx_data && strobe == port->sig.rx_strobe) {
-		VEPRINT(stderr, "strobe error!\n");
-		phys_reset(port);
-		return;
-	}*/
-
 	port->sig.rx_data = data;
 	port->sig.rx_strobe = strobe;
 

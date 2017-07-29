@@ -11,7 +11,7 @@ void net_rx(struct port *port, int c)
 	switch (c) {
 	case NCHAR_EOP:
 		port->info.num_eop++;
-		printf("[%s] recv: %s\n", port->name, port->net.rbuf + 1);
+		verbose && printf("[%s] recv: %s\n", port->name, port->net.rbuf + 1);
 		if (*port->name == 'r')
 			for (int i = 0; routes[i].addr; i++)
 				if (routes[i].addr == port->net.rbuf[0]) {
@@ -36,7 +36,7 @@ int net_tx(struct port *port)
 		return -1;
 
 	if (port->net.i == port->net.nt) {
-		printf("[%s] sent: %s\n", port->name, port->net.tbuf + 1);
+		verbose && printf("[%s] sent: %s\n", port->name, port->net.tbuf + 1);
 		port->net.i = 0;
 		port->net.nt = -1;
 		return NCHAR_EOP;

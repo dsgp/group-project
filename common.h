@@ -9,9 +9,6 @@
 
 /* user options */
 //#define VERBOSE_ERRORS         // error reports are verbose
-#define ENABLE_FAULT_INJECTION // fault injection is performed
-#define DATA_BER   0.00001f    // - BER = upsets rate per transfer
-#define STROBE_BER 0.00001f    // - BER = upsets rate per transfer
 
 /* definitions */
 #define LCHAR_NULL 0x100
@@ -40,6 +37,10 @@
 #	define VEPRINT(f, fmt, ...) ((void)0)
 #endif
 
+extern double data_ber;
+extern double strobe_ber;
+extern int verbose;
+
 struct port {
 	char name[16];
 	int addr;
@@ -50,7 +51,7 @@ struct port {
 		unsigned num_parity_errors;
 		unsigned num_credit_errors;
 		unsigned num_escape_errors;
-		unsigned num_strobe_errors;
+		unsigned num_disc_errors;
 		unsigned num_eep;
 		unsigned num_eop;
 		unsigned num_rx_data_char;

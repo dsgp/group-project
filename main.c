@@ -2,6 +2,8 @@
 
 #define NUM_PORTS 8
 
+int verbose;
+
 struct port nodes[NUM_PORTS];
 struct port router[NUM_PORTS];
 
@@ -37,17 +39,47 @@ static void dump(const struct port *port)
 {
 	if (!port->addr)
 		return;
-	printf("[%s]\n", port->name);
-	printf("- credit errors: %u\n", port->info.num_credit_errors);
-	printf("- parity errors: %u\n", port->info.num_parity_errors);
-	printf("- escape errors: %u\n", port->info.num_escape_errors);
-	printf("- strobe errors: %u\n", port->info.num_strobe_errors);
-	printf("- EOP: %u\n", port->info.num_eop);
-	printf("- EEP: %u\n", port->info.num_eep);
-	printf("- TX DATA: %u\n", port->info.num_tx_data_char);
-	printf("- TX CONTROL: %u\n", port->info.num_tx_ctrl_char);
-	printf("- RX DATA: %u\n", port->info.num_rx_data_char);
-	printf("- RX CONTROL: %u\n", port->info.num_rx_ctrl_char);
+
+	if (verbose) {
+		printf("[%s]\n"
+			"- credit errors: %u\n"
+			"- parity errors: %u\n"
+			"- escape errors: %u\n"
+			"- disc   errors: %u\n"
+			"- EOP: %u\n"
+			"- EEP: %u\n"
+			"- TX DATA: %u\n"
+			"- TX CONTROL: %u\n"
+			"- RX DATA: %u\n"
+			"- RX CONTROL: %u\n",
+			port->name,
+			port->info.num_credit_errors,
+			port->info.num_parity_errors,
+			port->info.num_escape_errors,
+			port->info.num_disc_errors,
+			port->info.num_eop,
+			port->info.num_eep,
+			port->info.num_tx_data_char,
+			port->info.num_tx_ctrl_char,
+			port->info.num_rx_data_char,
+			port->info.num_rx_ctrl_char
+		);
+	} else {
+		printf("\"[%s]\" %f %u %u %u %u %u %u %u %u %u %u;\n",
+			port->name,
+			data_ber,
+			port->info.num_credit_errors,
+			port->info.num_parity_errors,
+			port->info.num_escape_errors,
+			port->info.num_disc_errors,
+			port->info.num_eop,
+			port->info.num_eep,
+			port->info.num_tx_data_char,
+			port->info.num_tx_ctrl_char,
+			port->info.num_rx_data_char,
+			port->info.num_rx_ctrl_char
+		);
+	}
 }
 
 
@@ -56,14 +88,22 @@ int main(int argc, char **argv)
 	size_t seed;
 	unsigned long long sim_cycles;
 
-	printf("usage: %s [seed] [sim_cycles]\n", *argv);
 
 	// seed
 	seed = argc > 1 && *argv[1] != '.' ? atoi(argv[1]) : time(0);
 	sim_cycles = argc > 2 && *argv[2] != '.' ? atoi(argv[2]) : -1;
+	data_ber = argc > 3 && *argv[3] != '.' ? atof(argv[3]) : 0;
+	strobe_ber = argc > 4 && *argv[4] != '.' ? atof(argv[4]) : 0;
+	verbose = argc > 5 && *argv[5] != '.';
+
 	srand(seed);
-	printf("seed: %zu\n", seed);
-	printf("sim_cycles: %016llu\n", sim_cycles);
+	if (verbose) {
+		printf("usage: %s [seed] [sim_cycles] [data-ber] [strobe-ber] [verbose]\n", *argv);
+		printf("seed: %zu\n", seed);
+		printf("sim_cycles: %016llu\n", sim_cycles);
+		printf("data_ber: %f\n", data_ber);
+		printf("strobe_ber: %f\n", strobe_ber);
+	}
 
 	for (unsigned i = 0; routes[i].addr; i++)
 		port_init(routes + i);
@@ -92,7 +132,6 @@ int main(int argc, char **argv)
 	}
 
 end:
-	printf("simulation report\n");
 	for (unsigned i = 0; i < NUM_PORTS; i++) {
 		dump(nodes + i);
 		dump(router + i);
