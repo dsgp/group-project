@@ -2,7 +2,6 @@
 
 void net_init(struct port *port, const char *msg)
 {
-	port->net.i = 0;
 	port->net.nt = -1;
 	if (msg) {
 		port->net.nt = strlen(msg) + 1;
@@ -43,7 +42,7 @@ int net_tx(struct port *port)
 	if (port->net.i == port->net.nt) {
 		if (verbose)
 			printf("[%s] sent: %s\n", port->name, port->net.tbuf + 1);
-		net_init(port, port->net.tbuf);
+		port->net.i = 0;
 		return NCHAR_EOP;
 	}
 
