@@ -44,6 +44,10 @@ static void dump(const struct port *port)
 	printf("- strobe errors: %u\n", port->info.num_strobe_errors);
 	printf("- EOP: %u\n", port->info.num_eop);
 	printf("- EEP: %u\n", port->info.num_eep);
+	printf("- TX DATA: %u\n", port->info.num_tx_data_char);
+	printf("- TX CONTROL: %u\n", port->info.num_tx_ctrl_char);
+	printf("- RX DATA: %u\n", port->info.num_rx_data_char);
+	printf("- RX CONTROL: %u\n", port->info.num_rx_ctrl_char);
 }
 
 

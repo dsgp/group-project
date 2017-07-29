@@ -53,6 +53,10 @@ struct port {
 		unsigned num_strobe_errors;
 		unsigned num_eep;
 		unsigned num_eop;
+		unsigned num_rx_data_char;
+		unsigned num_rx_ctrl_char;
+		unsigned num_tx_data_char;
+		unsigned num_tx_ctrl_char;
 	} info;
 	struct {
 		int nt, nr, i;
