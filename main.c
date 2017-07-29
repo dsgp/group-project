@@ -1,7 +1,4 @@
 #include "common.h"
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
 
 #define NUM_PORTS 8
 
@@ -31,10 +28,24 @@ static void port_init(const struct route *route)
 		strcpy(port->net.tbuf, route->msg);
 	}
 
-	phys_reset(port);
+	phys_reset(port, 0);
 	net_init(port);
 	net_init(endp);
 }
+
+static void dump(const struct port *port)
+{
+	if (!port->addr)
+		return;
+	printf("[%s]\n", port->name);
+	printf("- credit errors: %u\n", port->info.num_credit_errors);
+	printf("- parity errors: %u\n", port->info.num_parity_errors);
+	printf("- escape errors: %u\n", port->info.num_escape_errors);
+	printf("- strobe errors: %u\n", port->info.num_strobe_errors);
+	printf("- EOP: %u\n", port->info.num_eop);
+	printf("- EEP: %u\n", port->info.num_eep);
+}
+
 
 int main(int argc, char **argv)
 {
@@ -44,8 +55,8 @@ int main(int argc, char **argv)
 	printf("usage: %s [seed] [sim_cycles]\n", *argv);
 
 	// seed
-	seed = argc > 1 ? atoi(argv[1]) : time(0);
-	sim_cycles = argc > 2 ? atoi(argv[2]) : -1;
+	seed = argc > 1 && *argv[1] != '.' ? atoi(argv[1]) : time(0);
+	sim_cycles = argc > 2 && *argv[2] != '.' ? atoi(argv[2]) : -1;
 	srand(seed);
 	printf("seed: %zu\n", seed);
 	printf("sim_cycles: %016llu\n", sim_cycles);
@@ -68,32 +79,19 @@ int main(int argc, char **argv)
 		// end simulation when a port exceeds the number of simulation cycles
 		for (unsigned i = 0; i < NUM_PORTS; i++) {
 			if (nodes[i].addr && nodes[i].info.cycle >= sim_cycles) {
-				goto END;
+				goto end;
 			}
 			if (router[i].addr && router[i].info.cycle >= sim_cycles) {
-				goto END;
+				goto end;
 			}
 		}
 	}
 
-END:
+end:
 	printf("simulation report\n");
 	for (unsigned i = 0; i < NUM_PORTS; i++) {
-		if (nodes[i].addr) {
-			printf("[%s]\n", nodes[i].name);
-			printf("- credit errors: %u\n", nodes[i].info.num_credit_errors);
-			printf("- parity errors: %u\n", nodes[i].info.num_parity_errors);
-			printf("- escape errors: %u\n", nodes[i].info.num_escape_errors);
-			printf("- strobe errors: %u\n", nodes[i].info.num_strobe_errors);
-		}
-		if (router[i].addr) {
-			printf("[%s]\n", router[i].name);
-			printf("- credit errors: %u\n", router[i].info.num_credit_errors);
-			printf("- parity errors: %u\n", router[i].info.num_parity_errors);
-			printf("- escape errors: %u\n", router[i].info.num_escape_errors);
-			printf("- strobe errors: %u\n", router[i].info.num_strobe_errors);
-		}
+		dump(nodes + i);
+		dump(router + i);
 	}
-
 	return 0;
 }

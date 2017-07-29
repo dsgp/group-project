@@ -37,7 +37,7 @@ void sig_rx(struct port *port, int c)
 			} else {
 				VEPRINT(stderr, "[%s] %016llu: escape error!\n", port->name, port->info.cycle);
 				port->info.num_escape_errors++;
-				phys_reset(port);
+				phys_reset(port, 1);
 				return;
 			}
 			port->sig.got_esc = 0;
@@ -56,21 +56,17 @@ void sig_rx(struct port *port, int c)
 		// Strip parity and DC flag bits
 		character = (buffer >> 2) & 0xff;
 	}
-	// Check for errors
-	else if (port->sig.nr >= CHAR_DATA_SIZE) {
-		// This only happens when sig.nr > CHAR_DATA_SIZE
-		VEPRINT(stderr, "[%s] %016llu: sim error! func=%s line=%d (%d)\n", port->name, port->info.cycle, __FUNCTION__, __LINE__, port->sig.nr);
-		abort();
-	}
 	// Keep buffering bits
 	else {
+		assert(port->sig.nr < CHAR_DATA_SIZE);
+
 		// Check parity before escalating to Flow
 		if (port->sig.nr == 2) {
 			if (port->sig.rx_char != -1) {
 				if (!port->sig.rx_parity) {
 					VEPRINT(stderr, "[%s] %016llu: parity error!\n", port->name, port->info.cycle);
 					port->info.num_parity_errors++;
-					phys_reset(port);
+					phys_reset(port, 1);
 					return;
 				} else if (!port->sig.got_esc) {
 					if (flow_rx(port, port->sig.rx_char) < 0) {
@@ -94,10 +90,8 @@ void sig_rx(struct port *port, int c)
 
 int sig_tx(struct port *port)
 {
-	int i = port->sig.nt;
-
 	// Build character
-	if (i == 0) {
+	if (!port->sig.nt) {
 		int c;
 
 		// When sending a NULL, follow the first ESC with an FCT before fetching a new character
@@ -105,8 +99,12 @@ int sig_tx(struct port *port)
 			c = LCHAR_FCT;
 			port->sig.add_fct = 0;
 		}	
-		else
+		else {
+			// Keep signal 0 if there is nothing to send
 			c = flow_tx(port);
+			if (c < -1)
+				return 0;
+		}
 
 		// Default to Control Char
 		int dc_flag = 1;
@@ -138,11 +136,13 @@ int sig_tx(struct port *port)
 		port->sig.tx_parity = 1;
 	}
 
+	assert(port->sig.tx_size == CHAR_CONTROL_SIZE || port->sig.tx_size == CHAR_DATA_SIZE);
+
 	// Get next bit
-	int data = (port->sig.tx_char >> i) & 1;
+	int data = (port->sig.tx_char >> port->sig.nt) & 1;
 
 	// Keep a running parity check
-	if (i >= 2)
+	if (port->sig.nt >= 2)
 		port->sig.tx_parity = (!port->sig.tx_parity != !data);
 
 	// Toggle strobe when data bit doesn't change
@@ -150,8 +150,8 @@ int sig_tx(struct port *port)
 	port->sig.tx_data = data;
 
 	// Prepare next bit
-	i = (i + 1) % port->sig.tx_size;
-	port->sig.nt = i;
+	port->sig.nt++;
+	port->sig.nt %= port->sig.tx_size;
 
 	// Return first bit as data, second as strobe
 	return data | (port->sig.tx_strobe << 1);

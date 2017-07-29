@@ -1,5 +1,4 @@
 #include "common.h"
-#include <string.h>
 
 void net_init(struct port *port)
 {
@@ -9,7 +8,9 @@ void net_init(struct port *port)
 
 void net_rx(struct port *port, int c)
 {
-	if (c == NCHAR_EOP) {
+	switch (c) {
+	case NCHAR_EOP:
+		port->info.num_eop++;
 		printf("[%s] recv: %s\n", port->name, port->net.rbuf + 1);
 		if (*port->name == 'r')
 			for (int i = 0; routes[i].addr; i++)
@@ -19,10 +20,14 @@ void net_rx(struct port *port, int c)
 					break;
 				}
 		port->net.nr = 0;
-		return;
+		break;
+	case NCHAR_EEP:
+		port->info.num_eep++;
+		port->net.nr = 0;
+		break;
+	default:
+		port->net.rbuf[port->net.nr++] = c;
 	}
-
-	port->net.rbuf[port->net.nr++] = c;
 }
 
 int net_tx(struct port *port)

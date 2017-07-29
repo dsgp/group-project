@@ -40,7 +40,7 @@ void phys_rx(struct port *port)
 		sig_rx(port, port->phys.signal);
 }
 
-void phys_reset(struct port *port)
+static void reset(struct port *port, int err)
 {
 	VEPRINT(stderr, "[%s] %016llu: RESET\n", port->name, port->info.cycle);
 
@@ -48,18 +48,16 @@ void phys_reset(struct port *port)
 	memset(&port->sig, 0, sizeof port->sig);
 	memset(&port->flow, 0, sizeof port->flow);
 
-	memset(&port->endp->phys, 0, sizeof port->endp->phys);
-	memset(&port->endp->sig, 0, sizeof port->endp->sig);
-	memset(&port->endp->flow, 0, sizeof port->endp->flow);
- 
 	sig_init(port);
 	flow_init(port);
-	sig_init(port->endp);
-	flow_init(port->endp);
-	port->phys.reset = port->endp->phys.reset = 1;
 
-	/* flow control sends EEP to packet level */
-//XXX causings floating point exception: "i = (i + 1) % port->sig.tx_size;" in sig.c - divide by 0?
-//	net_rx(port, NCHAR_EEP);
-//	net_rx(port->endp, NCHAR_EEP);
+	port->phys.reset = 1;
+
+	if (err)
+		net_rx(port, NCHAR_EEP);
+}
+void phys_reset(struct port *port, int err)
+{
+	reset(port, err);
+	reset(port->endp, err);
 }

@@ -15,7 +15,7 @@ int flow_rx(struct port *port, int c)
 		if (port->flow.tx_credits > MAX_CREDIT_COUNT) {
 			VEPRINT(stderr, "[%s] %016llu: credit error!\n", port->name, port->info.cycle);
 			port->info.num_credit_errors++;
-			phys_reset(port);
+			phys_reset(port, 1);
 			return -1;
 		}
 
@@ -33,11 +33,9 @@ int flow_rx(struct port *port, int c)
 	// LCHAR EEP becomes NCHAR EEP
 	} else if (c == LCHAR_EEP) {
 		c = NCHAR_EEP;
-	} else if (c < 0x100) {
-		// normative character - do nothing
+	// normative character
 	} else {
-		VEPRINT(stderr, "[%s] %016llu: sim error! func=%s line=%d (%d)\n", port->name, port->info.cycle, __FUNCTION__, __LINE__, c);
-		abort();
+		assert(c < 0x100);
 	}
 
 	port->flow.tx_outstanding--;

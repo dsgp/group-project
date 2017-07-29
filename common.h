@@ -1,9 +1,11 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 /* user options */
 //#define VERBOSE_ERRORS         // error reports are verbose
@@ -49,6 +51,8 @@ struct port {
 		unsigned num_credit_errors;
 		unsigned num_escape_errors;
 		unsigned num_strobe_errors;
+		unsigned num_eep;
+		unsigned num_eop;
 	} info;
 	struct {
 		int nt, nr, i;
@@ -80,7 +84,7 @@ extern const struct route routes[];
 
 void phys_tx(struct port *);
 void phys_rx(struct port *);
-void phys_reset(struct port *);
+void phys_reset(struct port *, int);
 
 int sig_tx(struct port *);
 void sig_rx(struct port *, int);
