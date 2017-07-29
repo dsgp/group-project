@@ -43,15 +43,11 @@ void sig_rx(struct port *port, int c)
 		} else { // BITS_ESC
 			port->sig.got_esc = 1;
 		}
-
-		port->info.num_rx_ctrl_char++;
 	}
 	// Check if it's a data character
 	else if (port->sig.nr == CHAR_DATA_SIZE && !(buffer & 0x2)) {
 		// Strip parity and DC flag bits
 		character = (buffer >> 2) & 0xff;
-
-		port->info.num_rx_data_char++;
 	}
 	// Keep buffering bits
 	else {
@@ -131,12 +127,6 @@ int sig_tx(struct port *port)
 		// Shift parity and data control flag in front of data
 		port->sig.tx_char = (parity) | (dc_flag << 1) | ((c & 0xff) << 2);
 		port->sig.tx_parity = 1;
-
-		if (dc_flag) {
-			port->info.num_tx_ctrl_char++;
-		} else {
-			port->info.num_tx_data_char++;
-		}
 	}
 
 	assert(port->sig.tx_size == CHAR_CONTROL_SIZE || port->sig.tx_size == CHAR_DATA_SIZE);

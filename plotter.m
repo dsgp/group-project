@@ -30,8 +30,8 @@ for port = ports
 	subplot(2, 1, 2);
 	hold on
 	grid on
-	semilogx(pdata(:,2)', pdata(:,9)', 'linewidth', 2) # TX data
-	semilogx(pdata(:,2)', pdata(:,10)', 'linewidth', 2) # TX ctrl
+	semilogx(pdata(:,2)', pdata(:,11)', 'linewidth', 2) # RX data
+	semilogx(pdata(:,2)', pdata(:,12)', 'linewidth', 2) # RX ctrl
 	semilogx(pdata(:,2)', pdata(:,7)', 'linewidth', 2) # EOP
 	semilogx(pdata(:,2)', pdata(:,8)', 'linewidth', 2) # EEP
 
