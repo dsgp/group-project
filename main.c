@@ -43,42 +43,51 @@ static void dump(const struct port *port)
 
 	if (verbose) {
 		printf("[%s]\n"
-			"- credit errors: %u\n"
-			"- parity errors: %u\n"
-			"- escape errors: %u\n"
-			"- disc   errors: %u\n"
-			"- EOP: %u\n"
-			"- EEP: %u\n"
-			"- TX DATA: %u\n"
-			"- TX CONTROL: %u\n"
-			"- RX DATA: %u\n"
-			"- RX CONTROL: %u\n",
+			"- NUM CREDIT ERRORS: %u\n"
+			"- NUM PARITY ERRORS: %u\n"
+			"- NUM ESCAPE ERRORS: %u\n"
+			"- NUM DISC   ERRORS: %u\n"
+			"- NUM NET DATA: %u\n"
+			"- NUM NET EOP: %u\n"
+			"- NUM NET EEP: %u\n"
+			"- NUM DDL DATA: %u\n"
+			"- NUM DDL CONTROL: %u\n"
+			"- NUM DDL EOP: %u\n"
+			"- NUM DDL EEP: %u\n"
+			"- NUM DDL FCT: %u\n"
+			"- NUM DDL ESC: %u\n",
 			port->name,
 			port->info.num_credit_errors,
 			port->info.num_parity_errors,
 			port->info.num_escape_errors,
 			port->info.num_disc_errors,
-			port->info.num_eop,
-			port->info.num_eep,
-			port->info.num_tx_data_char,
-			port->info.num_tx_ctrl_char,
-			port->info.num_rx_data_char,
-			port->info.num_rx_ctrl_char
+			port->info.num_net_data,
+			port->info.num_net_eop,
+			port->info.num_net_eep,
+			port->info.num_dll_data,
+			port->info.num_dll_ctrl,
+			port->info.num_dll_eop,
+			port->info.num_dll_eep,
+			port->info.num_dll_fct,
+			port->info.num_dll_esc
 		);
 	} else {
-		printf("%s %f %u %u %u %u %u %u %u %u %u %u;\n",
+		printf("%s %f %u %u %u %u %u %u %u %u %u %u %u %u %u;\n",
 			port->port_addr,
 			data_ber,
 			port->info.num_credit_errors,
 			port->info.num_parity_errors,
 			port->info.num_escape_errors,
 			port->info.num_disc_errors,
-			port->info.num_eop,
-			port->info.num_eep,
-			port->info.num_tx_data_char,
-			port->info.num_tx_ctrl_char,
-			port->info.num_rx_data_char,
-			port->info.num_rx_ctrl_char
+			port->info.num_net_data,
+			port->info.num_net_eop,
+			port->info.num_net_eep,
+			port->info.num_dll_data,
+			port->info.num_dll_ctrl,
+			port->info.num_dll_eop,
+			port->info.num_dll_eep,
+			port->info.num_dll_fct,
+			port->info.num_dll_esc
 		);
 	}
 }

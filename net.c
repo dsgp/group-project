@@ -13,7 +13,7 @@ void net_rx(struct port *port, int c)
 {
 	switch (c) {
 	case NCHAR_EOP:
-		port->info.num_eop++;
+		port->info.num_net_eop++;
 		if (verbose)
 			printf("[%s] recv: %s\n", port->name, port->net.rbuf + 1);
 		if (*port->name == 'r')
@@ -26,10 +26,11 @@ void net_rx(struct port *port, int c)
 		port->net.nr = 0;
 		break;
 	case NCHAR_EEP:
-		port->info.num_eep++;
+		port->info.num_net_eep++;
 		port->net.nr = 0;
 		break;
 	default:
+		port->info.num_net_data++;
 		port->net.rbuf[port->net.nr++] = c;
 	}
 }

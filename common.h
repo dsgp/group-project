@@ -52,12 +52,15 @@ struct port {
 		unsigned num_credit_errors;
 		unsigned num_escape_errors;
 		unsigned num_disc_errors;
-		unsigned num_eep;
-		unsigned num_eop;
-		unsigned num_rx_data_char;
-		unsigned num_rx_ctrl_char;
-		unsigned num_tx_data_char;
-		unsigned num_tx_ctrl_char;
+		unsigned num_net_eep;
+		unsigned num_net_eop;
+		unsigned num_net_data;
+		unsigned num_dll_data;
+		unsigned num_dll_ctrl;
+		unsigned num_dll_fct;
+		unsigned num_dll_esc;
+		unsigned num_dll_eop;
+		unsigned num_dll_eep;
 	} info;
 	struct {
 		int nt, nr, i;
