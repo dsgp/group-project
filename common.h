@@ -38,7 +38,6 @@
 #endif
 
 extern double data_ber;
-extern double strobe_ber;
 extern int verbose;
 
 struct port {

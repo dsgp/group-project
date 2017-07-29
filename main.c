@@ -90,16 +90,14 @@ int main(int argc, char **argv)
 	seed = argc > 1 && *argv[1] != '.' ? atoi(argv[1]) : time(0);
 	sim_cycles = argc > 2 && *argv[2] != '.' ? atoi(argv[2]) : -1;
 	data_ber = argc > 3 && *argv[3] != '.' ? atof(argv[3]) : 0;
-	strobe_ber = argc > 4 && *argv[4] != '.' ? atof(argv[4]) : 0;
-	verbose = argc > 5 && *argv[5] != '.';
+	verbose = argc > 4 && *argv[4] != '.';
 
 	srand(seed);
 	if (verbose) {
-		printf("usage: %s [seed] [sim_cycles] [data-ber] [strobe-ber] [verbose]\n", *argv);
+		printf("usage: %s [seed] [sim_cycles] [data-ber] [verbose]\n", *argv);
 		printf("seed: %zu\n", seed);
 		printf("sim_cycles: %016llu\n", sim_cycles);
 		printf("data_ber: %f\n", data_ber);
-		printf("strobe_ber: %f\n", strobe_ber);
 	}
 
 	for (unsigned i = 0; routes[i].addr; i++)

@@ -1,7 +1,6 @@
 #include "common.h"
 
 double data_ber;
-double strobe_ber;
 
 void phys_tx(struct port *port)
 {
@@ -11,24 +10,10 @@ void phys_tx(struct port *port)
 	if (b < 0)
 		return;
 
-	/* fault injection */
-	int error = 0;
-	int b_prev = b;
-
 	/* randomly inject fault into data signal based on data BER */
 	if (rand() < data_ber * RAND_MAX) {
+		VEPRINT(stderr, "[%s] %016llu: UPSET\n", port->name, port->info.cycle);
 		b ^= 0x1;
-		error = 1;
-	}
-
-	/* randomly inject fault into strobe signal based on strobe BER */
-	if (rand() < strobe_ber * RAND_MAX) {
-		b ^= 0x2;
-		error = 1;
-	}
-
-	if (error) {
-		VEPRINT(stderr, "[%s] %016llu: UPSET: tx: %u -> %u\n", port->name, port->info.cycle, b_prev, b);
 	}
 
 	port->endp->phys.signal = b;
