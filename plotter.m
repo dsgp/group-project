@@ -15,8 +15,7 @@ NUM_DDL_EEP  = 13;
 NUM_DDL_FCT  = 14;
 NUM_DDL_ESC  = 15;
 
-ports = unique(data(:,1));
-ports = [20.0] #XXX
+ports = unique(data(:,1))';
 
 for port = ports
 	pdata = [];
@@ -27,7 +26,7 @@ for port = ports
 		end
 	end
 
-	figure(1, 'position', [5, 5, 800, 800]);
+	hf = figure(1);
 
 	hold off
 	subplot(3, 1, 1);
@@ -74,15 +73,8 @@ for port = ports
 	ylabel('Transfer Count', 'fontsize', 12)
 	legend('data', 'eop', 'eep', 'location', 'NorthWest')
 	grid on
+
+	str = sprintf("sim_report_%.1f.png", port);
+	print(hf, str, '-dpng', '-S800,800')
+	close(hf)
 end
-
-
-
-
-
-
-
-
-
-
-
